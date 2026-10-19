@@ -1,0 +1,808 @@
+{
+  "name": "LinkedIn Auto-Posting",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2432,
+        448
+      ],
+      "id": "350310f6-87e8-467f-9021-a7de1f67f589",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 15 * * *"
+            }
+          ]
+        }
+      },
+      "id": "13378385-93d1-4ca1-8804-18e8fea6f47b",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -2432,
+        624
+      ],
+      "typeVersion": 1.2,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# LinkedIn Post Generation\n\n## Post Description\n{{ $('Get Data from Sheets1').item.json['Post Description'] }}\n\n## Instructions\n{{ $('Get Data from Sheets1').item.json['Text Instructions'] }}\n\n## Task\nGenerate a high-quality LinkedIn post using the post description and instructions above.\n\nRequirements:\n- Follow the provided instructions closely.\n- Write in a professional, natural, engaging, and positive tone.\n- Include practical examples, useful insights, or a discussion question when relevant to the topic.\n- Use clear formatting and short paragraphs.\n- Keep the entire post within 1300 characters, including hashtags, promotional content, and links.\n- Use relevant lowercase hashtags.\n- Avoid unnecessary repetition and generic filler.\n- If the instructions explicitly require using the post description verbatim, preserve its wording exactly.\n- Follow the book-promotion requirements defined in the System Message, while keeping the promotion concise and relevant.\n- Do not invent facts, statistics, or personal experiences.\n\nOutput only the final LinkedIn post, ready to publish. Do not include explanations, headings, or commentary.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an expert social media strategist and LinkedIn content writer.\n\nYou will receive:\n- A brief post description or topic.\n- Specific instructions for creating the post.\n\n## 1. Content Creation\nWrite a polished, engaging, and professional LinkedIn post based on the provided description and instructions.\n\n- Follow the user's instructions closely.\n- Explain the topic clearly and naturally.\n- Include practical examples, useful insights, or a discussion question when relevant.\n- Use a positive, inclusive, professional, and human-sounding tone.\n- Include a call to action or a specific phrase when requested.\n- Avoid generic filler, unnecessary repetition, and exaggerated claims.\n\n## 2. Formatting\n- Keep the entire post within 1300 characters, including spaces and hashtags.\n- Use relevant hashtags in lowercase.\n- Use short paragraphs and readable line breaks.\n- Ensure the final result is ready to publish directly on LinkedIn.\n\n## 3. Output Rules\n- Return ONLY the final LinkedIn post text.\n- Do not include explanations, headings, quotation marks, markdown formatting, or commentary outside the post.\n- Never invent statistics, facts, personal experiences, or endorsements.\n- If the user explicitly requests the post description to be reproduced exactly, preserve its wording as instructed.\n\nAlways prioritize the user's specific instructions while following these guidelines."
+            }
+          ]
+        }
+      },
+      "id": "d87653a3-43cc-4f86-a206-149a6c4a89c4",
+      "name": "Generate Post Content",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        -1168,
+        448
+      ],
+      "typeVersion": 1.6
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c222c42e-b639-4a74-a1b0-7a3e6e141d55",
+              "name": "Post Description",
+              "type": "string",
+              "value": "={{ $('Get Data from Sheets1').item.json['Post Description'] }}"
+            },
+            {
+              "id": "973d0531-2d91-4271-996e-417bb45a82a6",
+              "name": "Output",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4fddbbaa-f020-4321-91bf-e05731a02575",
+      "name": "Data Formatting 1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -816,
+        448
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9a78220d-35f5-48b6-9ce3-faecaac24b74",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $('Get Data from Sheets1').item.json['Image link'] }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fd5df87b-a61b-4fbf-b710-89334fe5acf6",
+      "name": "If Image Provided",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -608,
+        448
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "person": "REPLACE_WITH_YOUR_LINKEDIN_PERSON_ID",
+        "text": "={{ $('Data Formatting 1').item.json.Output }}\nFollow Me for More ♥",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "id": "3b4dd96f-fc40-42b3-9a99-90bbd7b71e9b",
+      "name": "Post With Image",
+      "type": "n8n-nodes-base.linkedIn",
+      "position": [
+        -240,
+        272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "person": "REPLACE_WITH_YOUR_LINKEDIN_PERSON_ID",
+        "text": "={{ $('Data Formatting 1').item.json.Output }}\n\nFollow Me for More ♥",
+        "additionalFields": {}
+      },
+      "id": "50b540b4-0c19-4064-9190-9426f9f3cc95",
+      "name": "Post Without Image",
+      "type": "n8n-nodes-base.linkedIn",
+      "position": [
+        -240,
+        464
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "complete ",
+            "Post Description": "={{ $('Data Formatting 1').item.json['Post Description'] }}",
+            "Output": "={{ $('Data Formatting 1').item.json.Output }}",
+            "Post Link": "={{ $json.urn }}"
+          },
+          "matchingColumns": [
+            "Post Description"
+          ],
+          "schema": [
+            {
+              "id": "Post Description",
+              "displayName": "Post Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Output",
+              "displayName": "Output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post Link",
+              "displayName": "Post Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Image",
+              "displayName": "Image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instructions",
+              "displayName": "Instructions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "85048644-9b46-45d9-8395-feab7a3ffe10",
+      "name": "Update Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -48,
+        272
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "content": "## 1. Schedule & Sheet Data Retrieval\n\nThis workflow starts automatically on a defined schedule (e.g., daily or hourly).\n\nIt retrieves the next Google Sheet row marked as ‘Pending’.\n\nThe sheet should include columns like:\n1. Post Description\n2. Status\n3. Image link\n4. Output\n5. Post Link\n6. Text Instructions\n7. Image Instructions\n\nrow_number (required for updates)\n\nEnsure your Google Sheets credentials are correctly configured.",
+        "height": 380,
+        "width": 420
+      },
+      "id": "85b811ee-2d88-49ac-8a0e-8a30a051319a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2368,
+        816
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. AI-Powered Post Generation & Formatting\n\nUses OpenRouter Chat Model to generate a LinkedIn post based on the sheet’s Post Description and Instructions.\n\nYou can modify the prompt if needed.\n",
+        "height": 176,
+        "width": 404
+      },
+      "id": "8b5a44b4-9bda-40f4-a6b5-10e92bb92a26",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1232,
+        832
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. Image Check, Posting & Sheet Update\n\nChecks if an image URL is provided.\n- If present: Downloads the image and posts with it.\n- If not: Posts content without an image.\n\nAfter posting, it updates the Google Sheet with:\n- Status = Completed\n- LinkedIn post link/output",
+        "height": 240,
+        "width": 412
+      },
+      "id": "23c655c2-6c28-45e4-b0c3-9b37814ee4af",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3.5-super-vl:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        640
+      ],
+      "id": "cb5d3568-d0ba-4aa2-a7c2-45c573efaedc",
+      "name": "OpenRouter Chat Model"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Upload file').item.json.webViewLink }}",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "id": "3be84585-46aa-4dd4-aace-a674a0ed32a9",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -448,
+        272
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Get Data').item.json.row_number }}",
+            "Image link": "={{ $json.webViewLink }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Post Description",
+              "displayName": "Post Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Image link",
+              "displayName": "Image link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Output",
+              "displayName": "Output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Post Link",
+              "displayName": "Post Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Image Instructions",
+              "displayName": "Image Instructions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Text Instructions",
+              "displayName": "Text Instructions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "bb14121b-441c-4afd-bb8b-cbd8572df1d1",
+      "name": "Update Google Sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -1600,
+        240
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Pending"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "c99b03b3-d188-4c74-98e8-a9a5b2a2ecdf",
+      "name": "Get Data from Sheets1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -1360,
+        448
+      ],
+      "typeVersion": 4.5,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloudflare.com/client/v4/accounts/YOUR_CLOUDFLARE_ACCOUNT_ID/ai/run/@cf/black-forest-labs/flux-1-schnell",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_CLOUDFLARE_API_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"prompt\": $json[\"Image Instructions\"],\n  \"steps\": 4\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -2048,
+        240
+      ],
+      "id": "d2ed2ee7-f2b8-4cea-a11d-7bc06d1aeb09",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "result.image",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1888,
+        240
+      ],
+      "id": "1d8aa28a-28e1-40f6-98c6-bc1d6a3bbe98",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Get Data').item.json['Post Description'] }}.jpg",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "list",
+          "cachedResultName": "ai media ",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_GOOGLE_DRIVE_FOLDER_ID"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1744,
+        240
+      ],
+      "id": "428fd565-0236-4135-870d-12ba14de5fb6",
+      "name": "Upload file"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Pending"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "24a40c81-ae84-41e4-96d3-892e048e5c0e",
+      "name": "Get Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -2208,
+        240
+      ],
+      "typeVersion": 4.5,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "content": "## Post with Image",
+        "height": 240,
+        "width": 832,
+        "color": "#652F2F"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2240,
+        176
+      ],
+      "typeVersion": 1,
+      "id": "a4cd49c2-808b-4031-9219-0293a90d59f6",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post With Image": {
+      "main": [
+        [
+          {
+            "node": "Update Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "Data Formatting 1": {
+      "main": [
+        [
+          {
+            "node": "If Image Provided",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Image Provided": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post Without Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Without Image": {
+      "main": [
+        [
+          {
+            "node": "Update Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Post Content": {
+      "main": [
+        [
+          {
+            "node": "Data Formatting 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Post Content",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Post With Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Data from Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Generate Post Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Update Google Sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Google Sheet1": {
+      "main": [
+        [
+          {
+            "node": "Get Data from Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Data": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {},
+  "nodeGroups": [],
+  "tags": []
+}
